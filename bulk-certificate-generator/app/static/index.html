@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CertifyBulk — Institutional Credential & Certificate Issuance Engine</title>
+  <meta name="description" content="Enterprise credentialing and bulk certificate issuance engine. Fault-isolated PDF compilation, cryptographic verification, and instant batch archives.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <!-- Canvas for celebration confetti animation -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- Header / Navigation -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand">
+        <div class="brand-crest">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <div class="brand-title">Certify<span class="brand-accent">Bulk</span></div>
+          <span class="brand-subtitle">Institutional Credential Authority</span>
+        </div>
+      </div>
+
+      <div class="nav-links">
+        <span class="system-status-chip" id="system-status-indicator">
+          <span class="status-pulse-dot"></span> Issuance Engine Ready
+        </span>
+        <a href="/docs" target="_blank" class="nav-action-btn" id="nav-btn-docs">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          API Reference
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="main-layout">
+    <!-- Tab Controls -->
+    <nav class="tabs-header" aria-label="Issuance Engine Navigation">
+      <button class="tab-btn active" id="tab-nav-create" data-tab="tab-create">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 5v14M5 12h14"></path>
+        </svg>
+        Issue Certificates
+      </button>
+      <button class="tab-btn" id="tab-nav-tracker" data-tab="tab-tracker">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        Batch Monitor & Downloads
+      </button>
+      <button class="tab-btn" id="tab-nav-history" data-tab="tab-history">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 3v5h5M3.05 13A9 9 0 1 0 6 5.3L3 8"></path>
+        </svg>
+        Issuance Archives
+      </button>
+      <button class="tab-btn" id="tab-nav-verify" data-tab="tab-verify">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        Public Credential Verifier
+      </button>
+    </nav>
+
+    <!-- Tab 1: Create Generation Job -->
+    <section class="tab-panel active" id="tab-create">
+      <div class="workspace-grid">
+        <!-- Left Column: Form & Recipients Manager -->
+        <div class="panel-card form-column">
+          <div class="panel-header">
+            <div>
+              <span class="section-kicker">Cohort Issuance</span>
+              <h2 class="panel-title">Batch Credential Specification</h2>
+              <p class="panel-description">Configure the course title, issuing body, and recipient registry. Fault-isolated processing guarantees that any malformed entry never halts the issuance of valid certificates.</p>
+            </div>
+            <div class="sample-btn-group">
+              <button type="button" class="btn-sample" id="btn-load-sample" title="Load real professional cohort sample">
+                <span>🎓 Load Academy Cohort</span>
+              </button>
+              <button type="button" class="btn-sample" id="btn-load-mixed-sample" title="Load sample with intentional validation tests">
+                <span>⚖️ Load Validation Test Cohort</span>
+              </button>
+            </div>
+          </div>
+
+          <form id="form-create-job" class="job-form">
+            <!-- Program Details -->
+            <div class="form-grid">
+              <div class="form-group full-span">
+                <label for="input-title">Certification or Course Title <span class="required">*</span></label>
+                <input type="text" id="input-title" required placeholder="e.g. Master Program in Global Health Policy & Governance" class="form-control">
+              </div>
+
+              <div class="form-group">
+                <label for="input-issuer">Issuing Institution / Faculty <span class="required">*</span></label>
+                <input type="text" id="input-issuer" required placeholder="e.g. Cambridge Academic Credentialing Council" class="form-control">
+              </div>
+
+              <div class="form-group">
+                <label for="input-date">Issuance Date</label>
+                <input type="text" id="input-date" placeholder="e.g. October 10, 2026" class="form-control">
+              </div>
+
+              <div class="form-group full-span">
+                <label for="input-description">Curriculum or Program Honors Summary (Optional)</label>
+                <input type="text" id="input-description" placeholder="e.g. Conferred upon rigorous completion of advanced capstone defenses & practicum" class="form-control">
+              </div>
+            </div>
+
+            <!-- Recipient Input Manager -->
+            <div class="recipients-manager">
+              <div class="recipients-toolbar">
+                <div class="toolbar-title-group">
+                  <label class="toolbar-label">Recipient Registry</label>
+                  <span class="badge badge-info" id="badge-recipient-count">0 Candidates Listed</span>
+                </div>
+
+                <!-- Input Mode Switcher -->
+                <div class="mode-switcher" role="tablist">
+                  <button type="button" class="mode-tab active" id="btn-mode-table" data-mode="table">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                      <line x1="3" y1="9" x2="21" y2="9"></line>
+                      <line x1="9" y1="21" x2="9" y2="9"></line>
+                    </svg>
+                    Interactive Table
+                  </button>
+                  <button type="button" class="mode-tab" id="btn-mode-csv" data-mode="csv">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    Upload CSV
+                  </button>
+                  <button type="button" class="mode-tab" id="btn-mode-json" data-mode="json">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="16 18 22 12 16 6"></polyline>
+                      <polyline points="8 6 2 12 8 18"></polyline>
+                    </svg>
+                    JSON Array
+                  </button>
+                </div>
+              </div>
+
+              <!-- View 1: Interactive Table -->
+              <div id="view-mode-table" class="mode-view active">
+                <div class="table-actions-bar">
+                  <button type="button" class="btn-subtle" id="btn-add-recipient-row">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Add Recipient Row
+                  </button>
+                  <button type="button" class="btn-text-danger" id="btn-clear-recipients">Clear All Rows</button>
+                </div>
+
+                <div class="interactive-table-wrap">
+                  <table class="interactive-table">
+                    <thead>
+                      <tr>
+                        <th style="width: 32%;">Candidate Full Name <span class="required">*</span></th>
+                        <th style="width: 38%;">Official Email Address <span class="required">*</span></th>
+                        <th style="width: 20%;">Honors / Grade</th>
+                        <th style="width: 10%; text-align: right;">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="recipient-table-body">
+                      <!-- Populated dynamically -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- View 2: Drag & Drop CSV -->
+              <div id="view-mode-csv" class="mode-view">
+                <div class="csv-dropzone" id="csv-dropzone">
+                  <input type="file" id="input-csv-file" accept=".csv" class="file-input-hidden">
+                  <div class="dropzone-content">
+                    <div class="dropzone-icon">
+                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                      </svg>
+                    </div>
+                    <div class="dropzone-text">
+                      <strong>Drop CSV cohort file here</strong> or <span class="link-label">browse your computer</span>
+                    </div>
+                    <p class="dropzone-hint">Standard format: columns with <code>name</code>, <code>email</code>, and optional <code>grade</code> or <code>hours</code>.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- View 3: Direct JSON Array -->
+              <div id="view-mode-json" class="mode-view">
+                <textarea id="input-recipients-json" rows="10" class="form-control code-editor" spellcheck="false" placeholder='[
+  {
+    "name": "Eleanor Vance",
+    "email": "eleanor.vance@oxford.edu",
+    "grade": "First Class Honors"
+  }
+]'></textarea>
+                <p class="form-tip">💡 Formatted as an array of recipient objects. Automatic synchronization occurs between Table, CSV, and JSON modes.</p>
+              </div>
+            </div>
+
+            <!-- Submit Action -->
+            <div class="form-actions">
+              <button type="submit" class="btn-primary-action" id="btn-submit-job">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                </svg>
+                Authorize & Issue Certificates
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Right Column: Live Certificate Visual Preview -->
+        <div class="preview-column">
+          <div class="panel-card preview-card-wrapper">
+            <div class="preview-card-header">
+              <div class="preview-tag">
+                <span class="preview-dot"></span> Live Vector Preview
+              </div>
+              <span class="preview-note">Simulated layout in real-time</span>
+            </div>
+
+            <!-- Authentic Certificate Mockup -->
+            <div class="certificate-mockup" id="cert-preview-card">
+              <div class="cert-border-outer">
+                <div class="cert-border-inner">
+                  <!-- Corner Ornaments -->
+                  <div class="cert-corner top-left"></div>
+                  <div class="cert-corner top-right"></div>
+                  <div class="cert-corner bottom-left"></div>
+                  <div class="cert-corner bottom-right"></div>
+
+                  <div class="cert-body">
+                    <div class="cert-institution" id="live-preview-issuer">Cambridge Academic Credentialing Council</div>
+                    
+                    <div class="cert-crest-mark">
+                      <div class="crest-circle">
+                        <span>★</span>
+                      </div>
+                    </div>
+
+                    <div class="cert-award-kicker">CERTIFICATE OF RECOGNITION</div>
+                    <div class="cert-subtext">This honor is officially conferred upon</div>
+
+                    <div class="cert-recipient-name" id="live-preview-recipient">Eleanor Vance</div>
+                    <div class="cert-rule-line"></div>
+
+                    <div class="cert-body-text">
+                      for distinguished mastery, scholastic rigor, and successful fulfillment of all prescribed requirements in
+                    </div>
+
+                    <div class="cert-title-display" id="live-preview-title">Master Program in Global Health Policy</div>
+
+                    <!-- Footer Signatures & Seal -->
+                    <div class="cert-footer">
+                      <div class="cert-sig-block">
+                        <div class="cert-sig-line"></div>
+                        <span class="cert-sig-label">Date of Issuance</span>
+                        <span class="cert-sig-val" id="live-preview-date">October 10, 2026</span>
+                      </div>
+
+                      <div class="cert-seal">
+                        <div class="seal-foil">
+                          <div class="seal-ribbon left"></div>
+                          <div class="seal-ribbon right"></div>
+                          <div class="seal-ring">
+                            <span class="seal-star">★</span>
+                            <span class="seal-text">OFFICIAL SEAL</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="cert-sig-block">
+                        <div class="cert-sig-line"></div>
+                        <span class="cert-sig-label">Credential Verification</span>
+                        <span class="cert-sig-val" id="live-preview-cert-id">UUID: AUTHENTIC-ISSUANCE</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recipient Switcher for Preview -->
+            <div class="preview-candidate-bar">
+              <span class="preview-candidate-label">Preview Candidate:</span>
+              <div class="preview-candidate-chips" id="preview-candidate-chips">
+                <!-- Dynamically populated candidate selector chips -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 2: Live Job Progress & Downloads -->
+    <section class="tab-panel" id="tab-tracker">
+      <div class="panel-card">
+        <!-- Tracker Lookup Header -->
+        <div class="tracker-search-bar">
+          <div class="search-input-wrapper">
+            <label for="input-tracker-job-id" class="sr-only">Batch Identifier</label>
+            <input type="text" id="input-tracker-job-id" placeholder="Enter Batch Job ID to track..." class="form-control">
+          </div>
+          <button type="button" class="btn-primary-action" id="btn-track-job">
+            Inspect Batch
+          </button>
+          <button type="button" class="btn-sample" id="btn-refresh-tracker">
+            <span>🔄 Refresh</span>
+          </button>
+        </div>
+
+        <div id="tracker-empty-state" class="empty-state">
+          <div class="empty-icon-wrap">
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </div>
+          <h3>No Cohort Batch Selected</h3>
+          <p>Submit a new cohort from the <strong>Issue Certificates</strong> tab or enter an existing Job ID above to inspect real-time progress and download credentials.</p>
+        </div>
+
+        <div id="tracker-content" class="tracker-details hidden">
+          <!-- Job Summary Banner -->
+          <div class="job-summary-banner">
+            <div class="job-meta">
+              <div class="status-wrap">
+                <span class="status-pill" id="tracker-status-pill">PENDING</span>
+              </div>
+              <h2 id="tracker-job-title" class="job-title-display">Course Title</h2>
+              <p id="tracker-job-issuer" class="job-subtitle-display">Issued by Cambridge Credential Council</p>
+              <div class="job-meta-chips">
+                <span id="tracker-job-id-chip" class="chip">Job ID: -</span>
+                <span id="tracker-job-date-chip" class="chip">Date: -</span>
+              </div>
+            </div>
+            <div class="job-banner-actions">
+              <a href="#" id="btn-download-all-zip" class="btn-zip-download disabled" target="_blank">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Download Complete Batch (ZIP)
+              </a>
+            </div>
+          </div>
+
+          <!-- Progress Bar & Metrics -->
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <span class="metric-label">Enrolled Cohort</span>
+              <span class="metric-value" id="metric-total">0</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-label">Compiled</span>
+              <span class="metric-value" id="metric-processed">0</span>
+            </div>
+            <div class="metric-card card-success">
+              <span class="metric-label">Valid & Generated</span>
+              <span class="metric-value text-success" id="metric-success">0</span>
+            </div>
+            <div class="metric-card card-danger">
+              <span class="metric-label">Validation Errors</span>
+              <span class="metric-value text-danger" id="metric-failed">0</span>
+            </div>
+          </div>
+
+          <div class="progress-container">
+            <div class="progress-info">
+              <span class="progress-title">Compilation Lifecycle</span>
+              <span id="progress-label" class="progress-pct">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="progress-fill" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- Recipients Items Table -->
+          <div class="table-card">
+            <div class="table-header">
+              <div>
+                <h3 class="table-title">Recipient Registry</h3>
+                <p class="table-subtitle">Individual issuance state and document verification links</p>
+              </div>
+              <div class="table-filters">
+                <button type="button" class="filter-chip active" data-filter="all">All Candidates</button>
+                <button type="button" class="filter-chip" data-filter="COMPLETED">Completed</button>
+                <button type="button" class="filter-chip" data-filter="FAILED">Failed</button>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Candidate</th>
+                    <th>Email Address</th>
+                    <th>Status</th>
+                    <th>Diagnostics</th>
+                    <th style="text-align: right;">Credentials</th>
+                  </tr>
+                </thead>
+                <tbody id="tracker-items-body">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 3: Job History -->
+    <section class="tab-panel" id="tab-history">
+      <div class="panel-card">
+        <div class="panel-header">
+          <div>
+            <span class="section-kicker">Records</span>
+            <h2 class="panel-title">Issuance Registry Archives</h2>
+            <p class="panel-description">Review previously compiled certification cohorts, inspection status, and batch zip distributions.</p>
+          </div>
+          <button type="button" class="btn-sample" id="btn-refresh-history">
+            <span>🔄 Refresh Archives</span>
+          </button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Program & Issuing Institution</th>
+                <th>Status</th>
+                <th>Progress</th>
+                <th>Issued / Cohort</th>
+                <th>Timestamp</th>
+                <th style="text-align: right;">Batch Actions</th>
+              </tr>
+            </thead>
+            <tbody id="history-items-body">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 4: Certificate Verifier -->
+    <section class="tab-panel" id="tab-verify">
+      <div class="panel-card">
+        <div class="panel-header">
+          <div>
+            <span class="section-kicker">Integrity Audit</span>
+            <h2 class="panel-title">Public Authenticity Verification</h2>
+            <p class="panel-description">Verify the institutional integrity of any certificate issued by this authority using its permanent cryptographic identifier.</p>
+          </div>
+          <button type="button" class="btn-sample" id="btn-sample-verify">
+            <span>🧪 Load Recent ID to Verify</span>
+          </button>
+        </div>
+
+        <div class="verify-input-card">
+          <div class="form-group">
+            <label for="input-verify-id">Certificate Identifier (UUID / ID)</label>
+            <div class="verify-input-group">
+              <input type="text" id="input-verify-id" placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000" class="form-control">
+              <button type="button" class="btn-primary-action" id="btn-run-verify">
+                Verify Authenticity
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="verify-guide-banner">
+          <h4>💡 Where to find your Certificate Identifier (UUID):</h4>
+          <ul>
+            <li><strong>Official Certificate PDF</strong>: Printed at the bottom-right corner (e.g. <code>ID: 2cbaa01b-...</code>).</li>
+            <li><strong>Embedded Scannable QR Code</strong>: Scanning the QR badge directly verifies the certificate.</li>
+            <li><strong>Batch Monitor Table</strong>: Click the <strong>Copy ID</strong> or <strong>🔍 Verify</strong> button next to any recipient row.</li>
+            <li><strong>Instant Demonstration</strong>: Click <strong>"🧪 Load Recent ID to Verify"</strong> above to audit a previously generated certificate immediately.</li>
+          </ul>
+        </div>
+
+        <div id="verify-result-container" class="verify-result-card hidden">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- PDF Preview Modal -->
+  <div id="preview-modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="modal-kicker">Official Document Preview</span>
+          <h3 id="modal-title">Certificate Document</h3>
+        </div>
+        <button type="button" class="btn-close" id="btn-close-modal" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <iframe id="pdf-preview-frame" src="about:blank" title="Certificate PDF Preview"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <strong>CertifyBulk</strong> &bull; Institutional Credentialing System
+      </div>
+      <p class="footer-tech">Engineered with Python, FastAPI, SQLAlchemy & ReportLab Vector Typography</p>
+    </div>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
